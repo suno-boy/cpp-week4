@@ -7,78 +7,94 @@ bool array2D_signal_1 = false;
 bool array2D_signal_2 = false;
 std::string command_Input;
 std::string array_2value_type;
-int array_small_size;
-int array_big_size;
+int array_small_size = 0;
+int array_big_size = 0;
 Database myDatabase;
 
 Entry* create(Type type, std::string key, void* value) {
     Entry* newEntry = new Entry;
     newEntry->type = type;
     newEntry->key = key;
-    if (type == Type::INT) {
+
+    if (type == Type::INT) 
+    {
         int* intValue = new int;
         *intValue = *static_cast<int*>(value);
         newEntry->value = intValue;
-    } else if (type == Type::DOUBLE) {
+    } 
+    else if (type == Type::DOUBLE) 
+    {
         double* doubleValue = new double;
         *doubleValue = *static_cast<double*>(value);
         newEntry->value = doubleValue;
-    } else if (type == Type::STRING) {
+    } 
+    else if (type == Type::STRING) 
+    {
         std::string* stringValue = new std::string;
         *stringValue = *static_cast<std::string*>(value);
         newEntry->value = stringValue;
-    } else if (type == Type::ARRAY) {
-        int* arrayValue = static_cast<int*>(value); 
-        int arraySize = array_small_size; 
-        int* newArrayValue = new int[arraySize]; 
-        
-        for (int i = 0; i < arraySize; ++i) {
-            newArrayValue[i] = arrayValue[i];
+    } 
+     if (type == Type::ARRAY) 
+     {
+        Array* arrayValue = static_cast<Array*>(value);
+        Array* newArrayValue = new Array;
+        newArrayValue->size = arrayValue->size;
+        newArrayValue->type = arrayValue->type;
+
+        if (arrayValue->items != nullptr) 
+        {
+            int* items = static_cast<int*>(arrayValue->items);
+            int* newArrayItems = new int[arrayValue->size];
+            for (int i = 0; i < arrayValue->size; ++i) 
+            {
+                newArrayItems[i] = items[i];
+            }
+            newArrayValue->items = newArrayItems;
+        } 
+        else 
+        {
+            newArrayValue->items = nullptr;
         }
 
         newEntry->value = newArrayValue;
+    } else {
+        newEntry->value = value;
     }
 
     return newEntry;
 }
 void init(Database &database) {
   database.size = 0;
+  destroy(database);
   
 }
 void list(Database &database) {
-    for (int i = 0; i < database.size; i++) {
-        if (database.entry[i].type == Type::STRING) {
+    for (int i = 0; i < database.size; i++) 
+    {
+        if (database.entry[i].type == Type::STRING) 
+        {
             std::cout << database.entry[i].key << " : \"" << *(static_cast<std::string*>(database.entry[i].value)) << "\"" << std::endl;
-        } else if (database.entry[i].type == Type::DOUBLE) {
+        } 
+        else if (database.entry[i].type == Type::DOUBLE) 
+        {
             std::cout << database.entry[i].key << " : " << *(static_cast<double*>(database.entry[i].value)) << std::endl;
-        } else if (database.entry[i].type == Type::INT) {
+        } 
+        else if (database.entry[i].type == Type::INT) 
+        {
             std::cout << database.entry[i].key << " : " << *(static_cast<int*>(database.entry[i].value)) << std::endl;
-        } else if (database.entry[i].type == Type::ARRAY) {
+        } 
+        else if (database.entry[i].type == Type::ARRAY) 
+        {
+            Array* array = static_cast<Array*>(database.entry[i].value);
             std::cout << database.entry[i].key << " : [";
-            if (database.entry[i].value != nullptr) {
-                if (database.entry[i].type == Type::INT) {
-                    int* arr = static_cast<int*>(database.entry[i].value);
-                    for (int j = 0; j < array_small_size; ++j) {
-                        std::cout << arr[j];
-                        if (j != array_small_size - 1) {
-                            std::cout << ", ";
-                        }
-                    }
-                } else if (database.entry[i].type == Type::DOUBLE) {
-                    double* arr = static_cast<double*>(database.entry[i].value);
-                    for (int j = 0; j < array_small_size; ++j) {
-                        std::cout << arr[j];
-                        if (j != array_small_size - 1) {
-                            std::cout << ", ";
-                        }
-                    }
-                } else if (database.entry[i].type == Type::STRING) {
-                    std::string* arr = static_cast<std::string*>(database.entry[i].value);
-                    for (int j = 0; j < array_small_size; ++j) {
-                        std::cout << "\"" << arr[j] << "\"";
-                        if (j != array_small_size - 1) {
-                            std::cout << ", ";
-                        }
+            if (array->items != nullptr) {
+                int* items = static_cast<int*>(array->items);
+                for (int j = 0; j < array->size; ++j) 
+                {
+                    std::cout << items[j];
+                    if (j != array->size - 1) 
+                    {
+                        std::cout << ", ";
                     }
                 }
             }
@@ -86,11 +102,11 @@ void list(Database &database) {
         }
     }
 }
-
-
 void add(Database &database, Entry *entry) {
-    for (int i = 0; i < database.size; ++i) {
-        if (database.entry[i].key == entry->key) {
+    for (int i = 0; i < database.size; ++i) 
+    {
+        if (database.entry[i].key == entry->key) 
+        {
             database.entry[i].type = entry->type;
             database.entry[i].value = entry->value;
             return;
@@ -110,9 +126,9 @@ Entry *get(Database &database, std::string &key) {
       {
         std::cout << key << ": " << "\"" << *(static_cast<std::string*>(database.entry[i].value)) << "\"" << std::endl;
       }
-      else if(database.entry[i].type == Type::ARRAY && !(array2D_signal_1) && !(array2D_signal_2))
+      else if(database.entry[i].type == Type::ARRAY && (!(array2D_signal_1) || !(array2D_signal_2)))
       {
-          int* array = static_cast<int*>(database.entry[i].value);
+          int* array = static_cast<int*>(database.entry[i].value); //배열의 자료형에 따라 int형이 바뀌어야할 것 같음
           std::cout << key << ": [";
           for (int j = 0; j < array_small_size; ++j) {
               std::cout << array[j];
@@ -122,7 +138,7 @@ Entry *get(Database &database, std::string &key) {
           }
           std::cout << "]" << std::endl;
       }
-      else if(database.entry[i].type == Type::ARRAY && (array2D_signal_1) && (array2D_signal_2))
+      else if(database.entry[i].type == Type::ARRAY && (array2D_signal_1) && (array2D_signal_2)) // 2차원 배열일때
       {
           int* array = static_cast<int*>(database.entry[i].value);
           std::cout << key << ": [";
@@ -148,9 +164,11 @@ Entry *get(Database &database, std::string &key) {
 void remove(Database &database, std::string &key) {
     
     for(int i = 0; i < database.size; ++i) {
-        if(database.entry[i].key == key) {
+        if(database.entry[i].key == key) 
+        {
             // 삭제된 항목 이후의 항목들을 하나씩 앞으로 이동
-            for(int j = i; j < database.size - 1; ++j) {
+            for(int j = i; j < database.size - 1; ++j) 
+            {
                 database.entry[j] = database.entry[j + 1];
             }
             // 배열 크기 줄이기
@@ -161,13 +179,19 @@ void remove(Database &database, std::string &key) {
 }
 void destroy(Database& database) {
     for (int i = 0; i < database.size; ++i) {
-        if (database.entry[i].type == Type::ARRAY) {
+        if (database.entry[i].type == Type::ARRAY) //Array가 아닐때는 왜 구현이 안돼있지?
+        {
             Array* array = static_cast<Array*>(database.entry[i].value);
-            if (array->type == Type::INT) {
+            if (array->type == Type::INT) 
+            {
                 delete[] static_cast<int*>(array->items);
-            } else if (array->type == Type::DOUBLE) {
+            } 
+            else if (array->type == Type::DOUBLE) 
+            {
                 delete[] static_cast<double*>(array->items);
-            } else if (array->type == Type::STRING) {
+            } 
+            else if (array->type == Type::STRING) 
+            {
                 delete[] static_cast<std::string*>(array->items);
             }
             delete array;
@@ -212,137 +236,26 @@ int main() {
         std::cin >> string_input;
         add(myDatabase,create(Type::STRING,key_input,&string_input));
       }
-      else if(type_input == "array")
+      else if (type_input == "array") 
       {
-        std::cout << "value: type(int, double, string, array): ";
-        std::string array_value_type;
-        std::cin >> array_value_type;
-        if(array_value_type == "int")
-        {
-          std::cout << "size: ";
-          int array_small_size = 0;
-          int *Array_int_small = new int[array_small_size];
-          std::cin >> array_small_size;
-          for (int i = 0; i < array_small_size; ++i) 
-          {
+        std::cout << "size: ";
+        int array_size;
+        std::cin >> array_size;
+
+        Array* arrayValue = new Array;
+        arrayValue->size = array_size;
+        arrayValue->type = Type::INT; // For simplicity, let's assume it's always int array
+
+        int* items = new int[array_size];
+        for (int i = 0; i < array_size; ++i) {
             std::cout << "item[" << i << "]: ";
-            std::cin >> Array_int_small[i];
-          }
-          add(myDatabase,create(Type::ARRAY,key_input,Array_int_small));
-          //배열 썼으니 초기화 시키자 
-          for(int i=0;i<array_small_size;i++)
-          {
-            Array_int_small[i] = 0;
-          }
+            std::cin >> items[i];
         }
-        else if(array_value_type == "double")
-        {
-          std::cout << "size: ";
-          int array_small_size = 0;
-          double *Array_double_small = new double[array_small_size];
-          std::cin >> array_small_size;
-          for (int i = 0; i < array_small_size; ++i) 
-          {
-            std::cout << "item[" << i << "]: ";
-            std::cin >> Array_double_small[i];
-          }
-          add(myDatabase,create(Type::ARRAY,key_input,Array_double_small));
-          //배열 썼으니 초기화 시키자 
-          for(int i=0;i<array_small_size;i++)
-          {
-            Array_double_small[i] = 0;
-          }
-        }
-        else if(array_value_type == "string")
-        {
-          std::cout << "size: ";
-          int array_small_size = 0;
-          std::string *Array_string_small = new std::string[array_small_size];
-          std::cin >> array_small_size;
-          for (int i = 0; i < array_small_size; ++i) 
-          {
-            std::cout << "item[" << i << "]: ";
-            std::getline(std::cin, Array_string_small[i]);
-          }
-          add(myDatabase,create(Type::ARRAY,key_input,Array_string_small));   
-          //배열 썼으니 초기화 시키자 
-          for(int i=0;i<array_small_size;i++)
-          {
-            Array_string_small[i] = "";
-          }   
-        }
-        else if(array_value_type == "array")
-        {
-          std::cout << "size: ";
-          int array_big_size = 0;
-          std::cin >> array_big_size; 
-          for(int i=0;i<array_big_size;i++)
-          {
-            std::cout << "item[" << i << "]: ";
-            std::cout << "type (int, double, string, array): ";
-            std::string array_2value_type;
-            std::cin >> array_2value_type;
-            if(array_2value_type == "int")
-            {
-              std::cout << "size: ";
-              int array_small_size = 0;
-              int *Array_int_small = new int[array_small_size];
-              std::cin >> array_small_size;
-              for(int k=0;k<array_small_size;k++)
-              {
-                std::cout << "item[" << k << "]: ";
-                std::cin >> Array_int_small[k];
-              }
-              add(myDatabase,create(Type::ARRAY,key_input,Array_int_small));
-              //배열 썼으니 초기화 시키자 
-              for(int k=0;k<array_small_size;k++)
-              {
-                Array_int_small[k] = 0;
-              }
-              array2D_signal_1 = true;
-            }
-            else if(array_2value_type == "double")
-            {
-              std::cout << "size: ";
-              int array_small_size = 0;
-              double *Array_double_small = new double[array_small_size];
-              std::cin >> array_small_size;
-              for(int k=0;k<array_small_size;k++)
-              {
-                std::cout << "item[" << k << "]: ";
-                std::cin >> Array_double_small[k];
-              }
-              add(myDatabase,create(Type::ARRAY,key_input,Array_double_small));
-              //배열 썼으니 초기화 시키자 
-              for(int k=0;k<array_small_size;k++)
-              {
-                Array_double_small[k] = 0;
-              }
-              array2D_signal_1 = true;
-            }
-            else if(array_2value_type == "string")
-            {
-              std::cout << "size: ";
-              int array_small_size = 0;
-              std::string *Array_string_small = new std::string[array_small_size];
-              std::cin >> array_small_size;
-              for(int k=0;k<array_small_size;k++)
-              {
-                std::cout << "item[" << k << "]: ";
-                std::cin >> Array_string_small[k];
-              }
-              add(myDatabase,create(Type::ARRAY,key_input,Array_string_small));
-              //배열 썼으니 초기화 시키자 
-              for(int k=0;k<array_small_size;k++)
-              {
-                Array_string_small[k] = "";
-              }
-              array2D_signal_1 = true;
-            }
-          }
-          array2D_signal_2 = true;
-        }
+        arrayValue->items = items;
+
+        add(myDatabase, create(Type::ARRAY, key_input, arrayValue));
       }
+      
 
 
       
