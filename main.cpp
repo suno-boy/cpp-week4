@@ -88,13 +88,29 @@ void list(Database &database) {
             Array* array = static_cast<Array*>(database.entry[i].value);
             std::cout << database.entry[i].key << " : [";
             if (array->items != nullptr) {
-                int* items = static_cast<int*>(array->items);
-                for (int j = 0; j < array->size; ++j) 
-                {
-                    std::cout << items[j];
-                    if (j != array->size - 1) 
-                    {
-                        std::cout << ", ";
+                if (array->type == Type::INT) {
+                    int* items = static_cast<int*>(array->items);
+                    for (int j = 0; j < array->size; ++j) {
+                        std::cout << items[j];
+                        if (j != array->size - 1) {
+                            std::cout << ", ";
+                        }
+                    }
+                } else if (array->type == Type::DOUBLE) {
+                    double* items = static_cast<double*>(array->items);
+                    for (int j = 0; j < array->size; ++j) {
+                        std::cout << items[j];
+                        if (j != array->size - 1) {
+                            std::cout << ", ";
+                        }
+                    }
+                } else if (array->type == Type::STRING) {
+                    std::string* items = static_cast<std::string*>(array->items);
+                    for (int j = 0; j < array->size; ++j) {
+                        std::cout << "\"" << items[j] << "\"";
+                        if (j != array->size - 1) {
+                            std::cout << ", ";
+                        }
                     }
                 }
             }
@@ -238,22 +254,52 @@ int main() {
       }
       else if (type_input == "array") 
       {
-        std::cout << "size: ";
-        int array_size;
-        std::cin >> array_size;
+          std::cout << "value: type (int, double, string): ";
+          std::string value_type;
+          std::cin >> value_type;
 
-        Array* arrayValue = new Array;
-        arrayValue->size = array_size;
-        arrayValue->type = Type::INT; // For simplicity, let's assume it's always int array
+          std::cout << "size: ";
+          int array_size;
+          std::cin >> array_size;
 
-        int* items = new int[array_size];
-        for (int i = 0; i < array_size; ++i) {
-            std::cout << "item[" << i << "]: ";
-            std::cin >> items[i];
-        }
-        arrayValue->items = items;
+          Array* arrayValue = new Array;
+          arrayValue->size = array_size;
 
-        add(myDatabase, create(Type::ARRAY, key_input, arrayValue));
+          if (value_type == "int") 
+          {
+              arrayValue->type = Type::INT;
+              int* items = new int[array_size];
+              for (int i = 0; i < array_size; ++i) 
+              {
+                  std::cout << "item[" << i << "]: ";
+                  std::cin >> items[i];
+              }
+              arrayValue->items = items;
+          } 
+          else if (value_type == "double") 
+          {
+              arrayValue->type = Type::DOUBLE;
+              double* items = new double[array_size];
+              for (int i = 0; i < array_size; ++i) 
+              {
+                  std::cout << "item[" << i << "]: ";
+                  std::cin >> items[i];
+              }
+              arrayValue->items = items;
+          }
+          else if (value_type == "string") 
+          {
+              arrayValue->type = Type::STRING;
+              std::string* items = new std::string[array_size];
+              for (int i = 0; i < array_size; ++i) 
+              {
+                  std::cout << "item[" << i << "]: ";
+                  std::cin >> items[i];
+              }
+              arrayValue->items = items;
+          }
+
+          add(myDatabase, create(Type::ARRAY, key_input, arrayValue));
       }
       
 
