@@ -159,9 +159,21 @@ void remove(Database &database, std::string &key) {
         }
     }
 }
-void destroy(Database &database) {
-  
-  exit(0);
+void destroy(Database& database) {
+    for (int i = 0; i < database.size; ++i) {
+        if (database.entry[i].type == Type::ARRAY) {
+            Array* array = static_cast<Array*>(database.entry[i].value);
+            if (array->type == Type::INT) {
+                delete[] static_cast<int*>(array->items);
+            } else if (array->type == Type::DOUBLE) {
+                delete[] static_cast<double*>(array->items);
+            } else if (array->type == Type::STRING) {
+                delete[] static_cast<std::string*>(array->items);
+            }
+            delete array;
+        }
+    }
+    exit(0);
 }
 
 int main() {
